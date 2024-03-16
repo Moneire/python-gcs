@@ -1,0 +1,8 @@
+README.md
+setup.py
+src/gcs/connector/__init__.py
+src/python_gcs.egg-info/PKG-INFO
+src/python_gcs.egg-info/SOURCES.txt
+src/python_gcs.egg-info/dependency_links.txt
+src/python_gcs.egg-info/requires.txt
+src/python_gcs.egg-info/top_level.txt

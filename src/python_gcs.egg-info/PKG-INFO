@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: python-gcs
+Version: 0.1.0
+Summary: A simple Python module for interfacing with the GCS (https://armgs.team/) server.
+Home-page: https://github.com/Moneire/python-gcs
+Author: Monere
+Author-email: ilyastep03@gmail.com
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Dist: requests>=2.25.1
+Requires-Dist: keyring>=23.0.1
