@@ -200,6 +200,24 @@ class GCSConnector:
             print("Error: " + res.text, file=sys.stderr)
             return False
 
+    def get_user_info(self, email=None):
+        sn = email or self.__user["login"]
+        data = json.dumps({
+            "reqId": "72139-" + str(datetime.now().second),
+            "aimsid": self.__user["aimsid"],
+            "params": {
+                "sn": sn
+            }
+        })
+        self.__headers["content-type"] = "application/json"
+        res = requests.post(self.__base_url + "rapi/getUserInfo", headers=self.__headers, data=data)
+        self.__headers["content-type"] = "application/x-www-form-urlencoded"
+        if res.ok and res.json()["status"]["code"] == 20000:
+            return res.json()["results"]
+        else:
+            print("Error: " + res.text, file=sys.stderr)
+            return False
+
     def __get_aimsid_by_fname(self, fname):
         return next(
             (obj["aimId"] for obj in self.get_list_of_chats() if 'friendly' in obj and obj["friendly"] == fname), None)
