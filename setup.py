@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='python-gcs',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/Moneire/python-gcs',
     author='Monere',
     author_email='ilyastep03@gmail.com',

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: python-gcs
-Version: 0.1.0
+Version: 0.1.1
 Summary: A simple Python module for interfacing with the GCS (https://armgs.team/) server.
 Home-page: https://github.com/Moneire/python-gcs
 Author: Monere

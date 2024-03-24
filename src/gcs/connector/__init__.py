@@ -1,3 +1,4 @@
+import json
 import sys
 import getpass
 import uuid
@@ -36,8 +37,9 @@ class GCSConnector:
             # "sec-fetch-dest": "empty",
             # "sec-fetch-mode": "cors",
             # "sec-fetch-site": "same-site",
-            "user-agent": "Chrome/122.0.0.0"
-            # "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            "user-agent": "Chrome/122.0.0.0",
+            # "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
+            #               "Chrome/122.0.0.0 Safari/537.36"
         }
 
         # Define the GET parameters for login methods in a dictionary
@@ -137,20 +139,38 @@ class GCSConnector:
         }
         res = requests.post(self.__base_url + "wim/im/sendIM", headers=self.__headers, data=data)
         if res.ok and res.json()["response"]["statusCode"] == 200:
-            return True
+            return res.json()["response"]["data"]
         else:
             print("Error: " + res.text, file=sys.stderr)
             return False
 
     def send_msg_by_fname(self, fname, message):
+        return self.send_msg(self.__get_aimsid_by_fname(fname), message)
 
-        aim_id = next(
-            (obj["aimId"] for obj in self.get_list_of_chats() if 'friendly' in obj and obj["friendly"] == fname), None)
-
-        if self.send_msg(aim_id, message):
-            return True
+    def get_chat_history(self, aimsid, count=20, from_msg_id="-1", patch_version="1"):
+        data = json.dumps({
+            "reqId": "24988-" + str(datetime.now().second),
+            "aimsid": self.__user["aimsid"],
+            "params": {
+                "sn": aimsid,
+                "fromMsgId": from_msg_id,
+                "count": -1 * count,
+                "lang": "en",
+                "mentions": {"resolve": False},
+                "patchVersion": patch_version
+            }
+        })
+        self.__headers["content-type"] = "application/json"
+        res = requests.post(self.__base_url + "rapi/getHistory", headers=self.__headers, data=data)
+        self.__headers["content-type"] = "application/x-www-form-urlencoded"
+        if res.ok and res.json()["status"]["code"] == 20000:
+            return res.json()["results"]
         else:
+            print("Error: " + res.text, file=sys.stderr)
             return False
+
+    def get_chat_history_by_fname(self, fname, count=20, from_msg_id="-1", patch_version="1"):
+        return self.get_chat_history(self.__get_aimsid_by_fname(fname), count, from_msg_id, patch_version)
 
     def get_list_of_chats(self, flush_cache=False):
 
@@ -168,7 +188,7 @@ class GCSConnector:
 
         # Send the request
         res = requests.get(self.__base_url + "/bos/a10-1/aim/fetchEvents", headers=self.__headers, params=params)
-
+        # print(json.dumps(res.json(), ensure_ascii=False))
         if res.ok and res.json()["response"]["statusCode"] == 200:
             group_list = next((obj["eventData"]["groups"] for obj in res.json()["response"]["data"]["events"]
                                if obj["type"] == "buddylist"), None)
@@ -180,7 +200,12 @@ class GCSConnector:
             print("Error: " + res.text, file=sys.stderr)
             return False
 
-    def __get_unic_address(self):
+    def __get_aimsid_by_fname(self, fname):
+        return next(
+            (obj["aimId"] for obj in self.get_list_of_chats() if 'friendly' in obj and obj["friendly"] == fname), None)
+
+    @staticmethod
+    def __get_unic_address():
         mac_num = hex(uuid.getnode()).replace('0x', '').upper()
         mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
         return mac.join("-").join(str(datetime.now().second))
@@ -223,8 +248,11 @@ class GCSConnector:
             'deviceId': self.__get_unic_address(),  # '292a5e-0057-7396-da97-668fe29fe5b7',
             'sessionTimeout': '2592000',
             'subscriptions': 'status',
-            'events': 'myInfo,presence,buddylist,typing,hiddenChat,hist,mchat,sentIM,imState,dataIM,offlineIM,userAddedToBuddyList,service,lifestream,apps,permitDeny,diff,webrtcMsg',
-            'includePresenceFields': 'aimId,displayId,friendly,friendlyName,state,userType,statusMsg,statusTime,lastseen,ssl,mute,counterEnabled,abContactName,abPhoneNumber,abPhones,official,quiet,autoAddition,largeIconId,nick,userState'
+            'events': 'myInfo,presence,buddylist,typing,hiddenChat,hist,mchat,sentIM,imState,dataIM,offlineIM,'
+                      'userAddedToBuddyList,service,lifestream,apps,permitDeny,diff,webrtcMsg',
+            'includePresenceFields': 'aimId,displayId,friendly,friendlyName,state,userType,statusMsg,statusTime,'
+                                     'lastseen,ssl,mute,counterEnabled,abContactName,abPhoneNumber,abPhones,official,'
+                                     'quiet,autoAddition,largeIconId,nick,userState'
         }
 
         res = requests.post(self.__base_url + "wim/aim/startSession", headers=self.__headers, params=params)
